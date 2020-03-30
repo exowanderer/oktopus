@@ -10,7 +10,7 @@ except ImportError:
     pass
 
 
-__all__ = ['LossFunction', 'L1Norm']
+__all__ = ['LossFunction', 'L1Norm', 'L2Norm']
 
 
 class LossFunction(object):
