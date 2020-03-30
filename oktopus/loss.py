@@ -141,10 +141,12 @@ class L1Norm(LossFunction):
     >>> data = np.random.exponential(size=50)
     >>> def constant_model(a):
     ...     return a
+
     >>> l1norm = L1Norm(data=data, model=constant_model)
     >>> result = l1norm.fit(x0=np.mean(data))
     >>> result.x
     array([ 0.83998338])
+
     >>> print(np.median(data)) # the analytical solution
     0.839883776803
     """
@@ -153,6 +155,7 @@ class L1Norm(LossFunction):
         self.data = data
         self.model = model
         self.regularization = regularization
+
         if self.regularization is None:
             self._evaluate = self._evaluate_wo_regularization
         else:
@@ -182,6 +185,80 @@ class L1Norm(LossFunction):
 
     def _evaluate_w_regularization(self, *params):
         return np.nansum(np.absolute(self.data - self.model(*params[:-1]))
+                         + params[-1] * self.regularization(*params[:-1]))
+
+    def evaluate(self, params):
+        return self._evaluate(*params)
+
+
+class L2Norm(LossFunction):
+    r"""Defines the L1 Norm loss function. L2 norm is usually useful
+        to optimize the "mean" model as the quadratic loss function.
+
+    .. math::
+
+        \arg \min_{\theta \in \Theta} \sum_k (y_k - f(x_k, \theta))^2
+
+    Attributes
+    ----------
+    data : array-like
+        Observed data
+    model : callable
+        A functional form that defines the model
+    regularization : callable
+        A functional form that defines the regularization term
+
+    Examples
+    --------
+    >>> from oktopus import L2Norm
+    >>> import autograd.numpy as np
+    >>> np.random.seed(0)
+    >>> data = np.random.exponential(size=50)
+    >>> def constant_model(a):
+    ...     return a
+
+    >>> l2norm = L2Norm(data=data, model=constant_model)
+    >>> result = l2norm.fit(x0=np.mean(data))
+    >>> result.x
+    array([ 0.83998338])
+
+    >>> print(np.mean(data)) # the analytical solution
+    0.839883776803
+    """
+
+    def __init__(self, data, model, regularization=None):
+        self.data = data
+        self.model = model
+        self.regularization = regularization
+        if self.regularization is None:
+            self._evaluate = self._evaluate_wo_regularization
+        else:
+            self._evaluate = self._evaluate_w_regularization
+
+    def __repr__(self):
+        return (f"<L2Norm("
+                f"data={self.data}, "
+                f"model={self.model}, "
+                f"regularization={self.regularization})>")
+
+    @property
+    def regularization(self):
+        return self._regularization
+
+    @regularization.setter
+    def regularization(self, func):
+        if func is not None:
+            self._regularization = func
+            self._evaluate = self._evaluate_w_regularization
+        else:
+            self._regularization = None
+            self._evaluate = self._evaluate_wo_regularization
+
+    def _evaluate_wo_regularization(self, *params):
+        return np.nansum((self.data - self.model(*params))**2)
+
+    def _evaluate_w_regularization(self, *params):
+        return np.nansum((self.data - self.model(*params[:-1]))**2
                          + params[-1] * self.regularization(*params[:-1]))
 
     def evaluate(self, params):
