@@ -220,10 +220,10 @@ class L2Norm(LossFunction):
     >>> l2norm = L2Norm(data=data, model=constant_model)
     >>> result = l2norm.fit(x0=np.mean(data))
     >>> result.x
-    array([ 0.83998338])
+    array([ 1.04261742])
 
     >>> print(np.mean(data)) # the analytical solution
-    0.839883776803
+    1.0426174150956182
     """
 
     def __init__(self, data, model, regularization=None):
