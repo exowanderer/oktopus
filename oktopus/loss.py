@@ -44,9 +44,11 @@ class LossFunction(object):
 
     def fit(self, optimizer='minimize', **kwargs):
         """
-        Minimizes the :func:`evaluate` function using :func:`scipy.optimize.minimize`,
-        :func:`scipy.optimize.differential_evolution`,
-        :func:`scipy.optimize.basinhopping`, or :func:`skopt.gp.gp_minimize`.
+        Minimizes the :func:`evaluate` function using 
+            :func:`scipy.optimize.minimize`,
+            :func:`scipy.optimize.differential_evolution`,
+            :func:`scipy.optimize.basinhopping`, or 
+            :func:`skopt.gp.gp_minimize`.
 
         Parameters
         ----------
@@ -55,17 +57,18 @@ class LossFunction(object):
 
                 - ``'minimize'`` uses :func:`scipy.optimize.minimize`
 
-                - ``'differential_evolution'`` uses :func:`scipy.optimize.differential_evolution`
+                - ``'differential_evolution'`` uses 
+                    :func:`scipy.optimize.differential_evolution`
 
                 - ``'basinhopping'`` uses :func:`scipy.optimize.basinhopping`
 
                 - ``'gp_minimize'`` uses :func:`skopt.gp.gp_minimize`
 
             `'minimize'` is usually robust enough and therefore recommended
-            whenever a good initial guess can be provided. The remaining options
-            are global optimizers which might provide better results precisely
-            in cases where a close engouh initial guess cannot be obtained
-            trivially.
+            whenever a good initial guess can be provided.
+            The remaining options are global optimizers which might provide 
+            better results precisely in cases where a close engouh initial 
+            guess cannot be obtained trivially.
         kwargs : dict
             Dictionary for additional arguments.
 
@@ -156,8 +159,10 @@ class L1Norm(LossFunction):
             self._evaluate = self._evaluate_w_regularization
 
     def __repr__(self):
-        return "<L1Norm(data={}, model={}, regularization={})>".format(self.data,
-                self.model, self.regularization)
+        return (f"<L1Norm("
+                f"data={self.data}, "
+                f"model={self.model}, "
+                f"regularization={self.regularization})>")
 
     @property
     def regularization(self):
@@ -173,12 +178,11 @@ class L1Norm(LossFunction):
             self._evaluate = self._evaluate_wo_regularization
 
     def _evaluate_wo_regularization(self, *params):
-        return  np.nansum(np.absolute(self.data - self.model(*params)))
+        return np.nansum(np.absolute(self.data - self.model(*params)))
 
     def _evaluate_w_regularization(self, *params):
-        return  np.nansum(np.absolute(self.data - self.model(*params[:-1]))
-                          + params[-1] * self.regularization(*params[:-1]))
+        return np.nansum(np.absolute(self.data - self.model(*params[:-1]))
+                         + params[-1] * self.regularization(*params[:-1]))
 
     def evaluate(self, params):
         return self._evaluate(*params)
-

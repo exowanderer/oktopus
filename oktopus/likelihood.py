@@ -43,9 +43,11 @@ class Likelihood(LossFunction):
 
     def jeffreys_prior(self, params):
         """
-        Computes the negative of the log of Jeffrey's prior and evaluates it at ``params``.
+        Computes the negative of the log of Jeffrey's prior
+            and evaluates it at ``params``.
         """
-        return - 0.5 * np.linalg.slogdet(self.fisher_information_matrix(params))[1]
+        jeffreys_prior_ = self.fisher_information_matrix(params)
+        return - 0.5 * np.linalg.slogdet(jeffreys_prior_)[1]
 
     @abstractmethod
     def evaluate(self, params):
@@ -120,7 +122,7 @@ class MultinomialLikelihood(Likelihood):
         self.mean = mean
 
     def __repr__(self):
-        return "<MultinomialLikelihood(mean={})>".format(self.mean)
+        return f"<MultinomialLikelihood(mean={self.mean})>"
 
     @property
     def n_counts(self):
@@ -137,7 +139,8 @@ class MultinomialLikelihood(Likelihood):
         fisher = np.empty(shape=(n_params, n_params))
 
         if not hasattr(self.mean, 'gradient'):
-            _grad = lambda mean, argnum, params: jacobian(mean, argnum=argnum)(*params)
+            _grad = lambda mean, argnum, params: jacobian(
+                mean, argnum=argnum)(*params)
         else:
             _grad = lambda mean, argnum, params: mean.gradient(*params)[argnum]
 
@@ -155,15 +158,18 @@ class MultinomialLikelihood(Likelihood):
         # use the gradient if the model provides it.
         # if not, compute it using autograd.
         if not hasattr(self.mean, 'gradient'):
-            _grad = lambda mean, argnum, params: jacobian(mean, argnum)(*params)
+            _grad = lambda mean, argnum, params: jacobian(
+                mean, argnum)(*params)
         else:
             _grad = lambda mean, argnum, params: mean.gradient(*params)[argnum]
         n_params = len(np.atleast_1d(params))
         grad_likelihood = np.array([])
         for i in range(n_params):
             grad = _grad(self.mean, i, params)
-            grad_likelihood = np.append(grad_likelihood,
-                                        - np.nansum(self.data * grad / self.mean(*params)))
+            grad_likelihood = np.append(
+                grad_likelihood,
+                -np.nansum(self.data * grad / self.mean(*params))
+            )
         return grad_likelihood
 
 
@@ -171,14 +177,15 @@ class PoissonLikelihood(Likelihood):
     r"""
     Implements the negative log likelihood function for independent
     (possibly non-identically) distributed Poisson measurements.
-    This class also contains a method to compute maximum likelihood estimators (MLE)
-    for the mean of the Poisson distribution.
+    This class also contains a method to compute maximum likelihood estimators 
+    (MLE) for the mean of the Poisson distribution.
 
     More precisely, the MLE is computed as:
 
     .. math::
 
-         \arg \min_{\theta \in \Theta} \sum_k \lambda_k(\theta) - y_k \cdot \log \lambda_k(\theta)
+         \arg \min_{\theta \in \Theta} \sum_k \lambda_k(\theta) 
+            - y_k \cdot \log \lambda_k(\theta)
 
     Attributes
     ----------
@@ -191,8 +198,9 @@ class PoissonLikelihood(Likelihood):
 
     Notes
     -----
-    See `here <https://mirca.github.io/geerts-conjecture/>`_ for the mathematical
-    derivation of the Poisson likelihood expression.
+    See `here <https://mirca.github.io/geerts-conjecture/>`_
+        for the mathematical derivation of the Poisson likelihood
+        expression.
 
     Examples
     --------
@@ -217,7 +225,9 @@ class PoissonLikelihood(Likelihood):
     >>> mean_unc = logL.uncertainties(mean_hat.x)
     >>> mean_unc
     array([ 3.04795015])
-    >>> print("{:.5f}".format(math.sqrt(np.mean(toy_data)))) # theorectical Fisher information
+
+    # theorectical Fisher information
+    >>> print("{:.5f}".format(math.sqrt(np.mean(toy_data))))
     3.04795
     """
 
@@ -226,17 +236,20 @@ class PoissonLikelihood(Likelihood):
         self.mean = mean
 
     def __repr__(self):
-        return "<PoissonLikelihood(mean={})>".format(self.mean)
+        return f"<PoissonLikelihood(mean={self.mean})>"
 
     def evaluate(self, params):
-        return np.nansum(self.mean(*params) - self.data * np.log(self.mean(*params)))
+        return np.nansum(
+            self.mean(*params) - self.data * np.log(self.mean(*params))
+        )
 
     def fisher_information_matrix(self, params):
         n_params = len(np.atleast_1d(params))
         fisher = np.empty(shape=(n_params, n_params))
 
         if not hasattr(self.mean, 'gradient'):
-            _grad = lambda mean, argnum, params: jacobian(mean, argnum=argnum)(*params)
+            _grad = lambda mean, argnum, params: jacobian(
+                mean, argnum=argnum)(*params)
         else:
             _grad = lambda mean, argnum, params: mean.gradient(*params)[argnum]
 
@@ -254,15 +267,18 @@ class PoissonLikelihood(Likelihood):
         # use the gradient if the model provides it.
         # if not, compute it using autograd.
         if not hasattr(self.mean, 'gradient'):
-            _grad = lambda mean, argnum, params: jacobian(mean, argnum)(*params)
+            _grad = lambda mean, argnum, params: jacobian(
+                mean, argnum)(*params)
         else:
             _grad = lambda mean, argnum, params: mean.gradient(*params)[argnum]
         n_params = len(np.atleast_1d(params))
         grad_likelihood = np.array([])
         for i in range(n_params):
             grad = _grad(self.mean, i, params)
-            grad_likelihood = np.append(grad_likelihood,
-                                        np.nansum(grad * (1 - self.data / self.mean(*params))))
+            grad_likelihood = np.append(
+                grad_likelihood,
+                np.nansum(grad * (1 - self.data / self.mean(*params)))
+            )
         return grad_likelihood
 
 
@@ -276,7 +292,8 @@ class GaussianLikelihood(Likelihood):
 
     .. math::
 
-         \arg \min_{\theta \in \Theta} \dfrac{1}{2}\sum_k \left(\dfrac{y_k - \mu_k(\theta)}{\sigma_k}\right)^2
+         \arg \min_{\theta \in \Theta} \dfrac{1}{2}\sum_k \left(\dfrac{y_k
+            - \mu_k(\theta)}{\sigma_k}\right)^2
 
     Attributes
     ----------
@@ -300,22 +317,29 @@ class GaussianLikelihood(Likelihood):
     >>> fake_data = x * 3 + 10 + np.random.normal(scale=2, size=x.shape)
     >>> def line(x, alpha, beta):
     ...     return alpha * x + beta
+
     >>> my_line = lambda a, b: line(x, a, b)
     >>> logL = GaussianLikelihood(fake_data, my_line, 4)
     >>> p0 = (1, 1) # dumb initial_guess for alpha and beta
     >>> p_hat = logL.fit(x0=p0, method='Nelder-Mead')
     >>> p_hat.x # fitted parameters
     array([  2.96263393,  10.32860717])
-    >>> p_hat_unc = logL.uncertainties(p_hat.x) # get uncertainties on fitted parameters
+
+    # get uncertainties on fitted parameters
+    >>> p_hat_unc = logL.uncertainties(p_hat.x) 
     >>> p_hat_unc
     array([ 0.04874546,  0.28178535])
+
     >>> plt.plot(x, fake_data, 'o') # doctest: +SKIP
     >>> plt.plot(x, line(*p_hat.x)) # doctest: +SKIP
     >>> # The exact values from linear algebra would be:
     >>> M = np.array([[np.sum(x * x), np.sum(x)], [np.sum(x), len(x)]])
-    >>> alpha, beta = np.dot(np.linalg.inv(M), np.array([np.sum(fake_data * x), np.sum(fake_data)]))
+    >>> alpha, beta = np.dot(np.linalg.inv(M),
+                             np.array([np.sum(fake_data * x),
+                                       np.sum(fake_data)]))
     >>> print(alpha)
     2.96264087528
+
     >>> print(beta)
     10.3286166099
     """
@@ -326,7 +350,7 @@ class GaussianLikelihood(Likelihood):
         self.var = var
 
     def __repr__(self):
-        return "<GaussianLikelihood(mean={}, var={})>".format(self.mean, self.var)
+        return f"<GaussianLikelihood(mean={self.mean}, var={self.var})>"
 
     def evaluate(self, params):
         r = self.data - self.mean(*params)
@@ -336,7 +360,8 @@ class GaussianLikelihood(Likelihood):
         # use the gradient if the model provides it.
         # if not, compute it using autograd.
         if not hasattr(self.mean, 'gradient'):
-            _grad = lambda mean, argnum, params: jacobian(mean, argnum)(*params)
+            _grad = lambda mean, argnum, params: jacobian(
+                mean, argnum)(*params)
         else:
             _grad = lambda mean, argnum, params: mean.gradient(*params)[argnum]
         n_params = len(np.atleast_1d(params))
@@ -361,7 +386,8 @@ class GaussianLikelihood(Likelihood):
         fisher = np.zeros(shape=(n_params, n_params))
 
         if not hasattr(self.mean, 'gradient'):
-            _grad = lambda mean, argnum, params: jacobian(mean, argnum=argnum)(*params)
+            _grad = lambda mean, argnum, params: jacobian(
+                mean, argnum=argnum)(*params)
         else:
             _grad = lambda mean, argnum, params: mean.gradient(*params)[argnum]
 
@@ -383,7 +409,8 @@ class LaplacianLikelihood(Likelihood):
 
     .. math::
 
-         \arg \min_{\theta \in \Theta} \sum_k \dfrac{|y_k - \mu_k(\theta)|}{\sigma_k}
+         \arg \min_{\theta \in \Theta} \sum_k \dfrac{|y_k
+            - \mu_k(\theta)|}{\sigma_k}
 
     Attributes
     ----------
@@ -401,10 +428,12 @@ class LaplacianLikelihood(Likelihood):
         self.var = var
 
     def __repr__(self):
-        return "<LaplacianLikelihood(mean={}, var={})>".format(self.mean, self.var)
+        return f"<LaplacianLikelihood(mean={self.mean}, var={self.var})>"
 
     def evaluate(self, params):
-        return np.nansum(np.abs(self.data - self.mean(*params)) / np.sqrt(.5 * self.var))
+        return np.nansum(
+            np.abs(self.data - self.mean(*params)) / np.sqrt(.5 * self.var)
+        )
 
     def fisher_information_matrix(self, params):
         raise NotImplementedError
@@ -440,7 +469,9 @@ class MultivariateGaussianLikelihood(Likelihood):
             self._cov_inv = np.linalg.inv(self.cov)
 
     def __repr__(self):
-        return "<MultivariateGaussianLikelihood(mean={}, cov={})>".format(self.mean, self.cov)
+        return (f"<MultivariateGaussianLikelihood("
+                f"mean={self.mean}, "
+                f"cov={self.cov})>")
 
     def evaluate(self, params):
         """
@@ -452,8 +483,8 @@ class MultivariateGaussianLikelihood(Likelihood):
             parameter vector of the mean model and covariance matrix
         """
         if callable(self.cov):
-            theta = params[:self.dim] # mean model parameters
-            alpha = params[self.dim:] # kernel parameters (hyperparameters)
+            theta = params[:self.dim]  # mean model parameters
+            alpha = params[self.dim:]  # kernel parameters (hyperparameters)
             mean = self.mean(*theta)
             cov = self.cov(*alpha)
             self._cov_inv = np.linalg.inv(cov)
@@ -470,7 +501,8 @@ class MultivariateGaussianLikelihood(Likelihood):
         # use the gradient if the model provides it.
         # if not, compute it using autograd.
         if not hasattr(self.mean, 'gradient'):
-            _grad = lambda mean, argnum, params: jacobian(mean, argnum)(*params)
+            _grad = lambda mean, argnum, params: jacobian(
+                mean, argnum)(*params)
         else:
             _grad = lambda mean, argnum, params: mean.gradient(*params)[argnum]
         n_params = len(np.atleast_1d(params))
@@ -487,7 +519,8 @@ class MultivariateGaussianLikelihood(Likelihood):
         fisher = np.zeros(shape=(n_params, n_params))
 
         if not hasattr(self.mean, 'gradient'):
-            _grad = lambda mean, argnum, params: jacobian(mean, argnum=argnum)(*params)
+            _grad = lambda mean, argnum, params: jacobian(
+                mean, argnum=argnum)(*params)
         else:
             _grad = lambda mean, argnum, params: mean.gradient(*params)[argnum]
 
@@ -495,7 +528,8 @@ class MultivariateGaussianLikelihood(Likelihood):
 
         for i in range(n_params):
             for j in range(i, n_params):
-                fisher[i, j] = np.nansum(grad_mean[i] * self._cov_inv * grad_mean[j])
+                fisher[i, j] = np.nansum(
+                    grad_mean[i] * self._cov_inv * grad_mean[j])
                 fisher[j, i] = fisher[i, j]
 
         return fisher
@@ -510,7 +544,9 @@ class BernoulliLikelihood(Likelihood):
     More precisely, the MLE is computed as
 
     .. math::
-        \arg \min_{\theta \in \Theta} - \sum_{i=1}^{n} y_i\log\pi_i(\mathbf{\theta}) + (1 - y_i)\log(1 - \pi_i(\mathbf{\theta}))
+        \arg \min_{\theta \in \Theta} - \sum_{i=1}^{n} 
+            y_i\log\pi_i(\mathbf{\theta}) + 
+            (1 - y_i)\log(1 - \pi_i(\mathbf{\theta}))
 
     Attributes
     ----------
@@ -524,25 +560,32 @@ class BernoulliLikelihood(Likelihood):
     >>> import numpy as np
     >>> from oktopus import BernoulliLikelihood, UniformPrior, Posterior
     >>> from oktopus.models import ConstantModel as constant
-    >>> # generate integer fake data in the set {0, 1}
+
+    # generate integer fake data in the set {0, 1}
     >>> np.random.seed(0)
     >>> y = np.random.choice([0, 1], size=401)
-    >>> # create a model
+
+    # create a model
     >>> p = constant()
-    >>> # perform optimization
+
+    # perform optimization
     >>> ber = BernoulliLikelihood(data=y, mean=p)
     >>> unif = UniformPrior(lb=0., ub=1.)
     >>> pp = Posterior(likelihood=ber, prior=unif)
     >>> result = pp.fit(x0=.3, method='powell')
-    >>> # get best fit parameters
+
+    # get best fit parameters
     >>> print(np.round(result.x, 3))
     0.529
+
     >>> print(np.round(np.mean(y>0), 3)) # theorectical MLE
     0.529
-    >>> # get uncertainties on the best fit parameters
+
+    # get uncertainties on the best fit parameters
     >>> print(ber.uncertainties([result.x]))
     [ 0.0249277]
-    >>> # theorectical uncertainty
+
+    # theorectical uncertainty
     >>> print(np.sqrt(0.528678304239 * (1 - 0.528678304239) / 401))
     0.0249277036876
     """
@@ -596,21 +639,27 @@ class BernoulliGaussianMixtureLikelihood(Likelihood):
     Examples
     --------
     >>> import numpy as np
-    >>> from oktopus import BernoulliGaussianMixtureLikelihood, UniformPrior, Posterior
+    >>> from oktopus import (BernoulliGaussianMixtureLikelihood,
+                             UniformPrior, Posterior)
     >>> from oktopus.models import ConstantModel as constant
-    >>> # generate integer fake data in the set {0, 1}
+
+    # generate integer fake data in the set {0, 1}
     >>> np.random.seed(0)
     >>> y = np.append(np.random.normal(size=30), 1+np.random.normal(size=70))
-    >>> # create a model
+
+    # create a model
     >>> p = constant()
-    >>> # build likelihood
+
+    # build likelihood
     >>> ll = BernoulliGaussianMixtureLikelihood(data=y, mean=p, var=1.)
     >>> unif = UniformPrior(lb=0., ub=1.)
     >>> pp = Posterior(likelihood=ll, prior=unif)
     >>> result = pp.fit(x0=.3, method='powell')
-    >>> # get best fit parameters
+
+    # get best fit parameters
     >>> print(np.round(result.x, 3))
     0.803
+
     >>> print(np.mean(y>0)) # theorectical MLE
     0.78
     """

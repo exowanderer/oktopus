@@ -3,7 +3,8 @@ import autograd.numpy as np
 from .loss import LossFunction
 
 
-__all__ = ['Prior', 'JointPrior', 'UniformPrior', 'GaussianPrior', 'LaplacianPrior']
+__all__ = ['Prior', 'JointPrior', 'UniformPrior',
+           'GaussianPrior', 'LaplacianPrior']
 
 
 class Prior(LossFunction):
@@ -65,7 +66,7 @@ class JointPrior(Prior):
         self.components = args
 
     def __repr__(self):
-        return "<JointPrior({})>".format([c.__repr__() for c in self.components])
+        return f"<JointPrior({[c.__repr__() for c in self.components]})>"
 
     def evaluate(self, params):
         """Computes the sum of the log of each distribution given in *args*
@@ -81,7 +82,8 @@ class JointPrior(Prior):
         Returns
         -------
         value : scalar
-            Sum of the negative of the log of each distribution given in **args**
+            Sum of the negative of the log of each distribution
+                given in **args**
         """
         p = 0
         for i in range(len(params)):
@@ -112,7 +114,8 @@ class JointPrior(Prior):
 
     @property
     def mean(self):
-        return np.concatenate([self.components[i].mean for i in range(len(self.components))])
+        return np.concatenate([self.components[i].mean
+                               for i in range(len(self.components))])
 
 
 class UniformPrior(Prior):
@@ -140,11 +143,12 @@ class UniformPrior(Prior):
         self.lb = np.asarray([lb]).reshape(-1)
         self.ub = np.asarray([ub]).reshape(-1)
         if (self.lb >= self.ub).any():
-            raise ValueError("The lower bounds should be smaller than the upper bounds.")
+            raise ValueError(
+                "The lower bounds should be smaller than the upper bounds.")
         self.name = name
 
     def __repr__(self):
-        return "<UniformPrior(lb={}, ub={})>".format(self.lb, self.ub)
+        return f"<UniformPrior(lb={self.lb}, ub={self.ub})>"
 
     @property
     def mean(self):
@@ -194,7 +198,7 @@ class GaussianPrior(Prior):
         self.name = name
 
     def __repr__(self):
-        return "<GaussianPrior(mean={}, var={})>".format(self.mean, self.var)
+        return f"<GaussianPrior(mean={self.mean}, var={self.var})>"
 
     @property
     def mean(self):
@@ -213,6 +217,7 @@ class GaussianPrior(Prior):
 
     def gradient(self, params):
         return ((params - self.mean) / self.var).sum()
+
 
 class LaplacianPrior(Prior):
     """Computes the negative log pdf for a n-dimensional independent Laplacian
@@ -239,7 +244,7 @@ class LaplacianPrior(Prior):
         self.name = name
 
     def __repr__(self):
-        return "<LaplacianPrior(mean={}, var={})>".format(self.mean, self.var)
+        return f"<LaplacianPrior(mean={self.mean}, var={self.var})>"
 
     @property
     def mean(self):

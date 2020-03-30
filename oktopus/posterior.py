@@ -1,9 +1,12 @@
 import autograd.numpy as np
 from .loss import LossFunction
-from .likelihood import PoissonLikelihood, GaussianLikelihood, MultivariateGaussianLikelihood
+from .likelihood import (PoissonLikelihood,
+                         GaussianLikelihood,
+                         MultivariateGaussianLikelihood)
 
 
-__all__ = ['Posterior', 'GaussianPosterior', 'PoissonPosterior', 'MultivariateGaussianPosterior']
+__all__ = ['Posterior', 'GaussianPosterior',
+           'PoissonPosterior', 'MultivariateGaussianPosterior']
 
 
 class Posterior(LossFunction):
@@ -41,8 +44,9 @@ class Posterior(LossFunction):
         self.logprior = prior
 
     def __repr__(self):
-        return "<Posterior(likelihood={}, prior={})>".format(self.loglikelihood,
-                self.prior)
+        return ("<Posterior("
+                f"likelihood={self.loglikelihood}, "
+                f"prior={self.logprior})>")
 
     def evaluate(self, params):
         """Evaluates the negative of the log of the posterior at params.
@@ -60,7 +64,8 @@ class Posterior(LossFunction):
         return self.loglikelihood(params) + self.logprior(params)
 
     def gradient(self, params):
-        """Evaluates the gradient of the negative of the log of the posterior at params.
+        """Evaluates the gradient of the negative of the log of the 
+            posterior at params.
 
         Parameters
         ----------
@@ -72,7 +77,8 @@ class Posterior(LossFunction):
         value : scalar
             Value of the negative of the log of the posterior at params
         """
-        return self.loglikelihood.gradient(params) + self.logprior.gradient(params)
+        return (self.loglikelihood.gradient(params) +
+                self.logprior.gradient(params))
 
 
 class GaussianPosterior(Posterior):
@@ -95,7 +101,8 @@ class GaussianPosterior(Posterior):
 
     Examples
     --------
-    >>> from oktopus import GaussianPosterior, GaussianPrior, UniformPrior, JointPrior
+    >>> from oktopus import (GaussianPosterior, GaussianPrior,
+                             UniformPrior, JointPrior)
     >>> import autograd.numpy as np
     >>> #from matplotlib import pyplot as plt
     >>> x = np.linspace(0, 10, 200)
@@ -107,16 +114,21 @@ class GaussianPosterior(Posterior):
     >>> slope_prior = UniformPrior(lb=1., ub=10.)
     >>> intercept_prior = UniformPrior(lb=5., ub=20.)
     >>> joint_prior = JointPrior(slope_prior, intercept_prior)
-    >>> logP = GaussianPosterior(data=fake_data, mean=my_line, var=4, prior=joint_prior)
+    >>> logP = GaussianPosterior(data=fake_data,
+                                 mean=my_line,
+                                 var=4,
+                                 prior=joint_prior)
     >>> p0 = (slope_prior.mean, intercept_prior.mean) # initial guesses for slope and intercept
     >>> p_hat = logP.fit(x0=p0, method='powell')
     >>> p_hat.x # fitted parameters
     array([  2.96264088,  10.3286166 ])
-    >>> #plt.plot(x, fake_data, 'o')
-    >>> #plt.plot(x, line(*p_hat.x))
+    >>> # plt.plot(x, fake_data, 'o')
+    >>> # plt.plot(x, line(*p_hat.x))
     >>> # The exact values from linear algebra are:
     >>> M = np.array([[np.sum(x * x), np.sum(x)], [np.sum(x), len(x)]])
-    >>> slope, intercept = np.dot(np.linalg.inv(M), np.array([np.sum(fake_data * x), np.sum(fake_data)]))
+    >>> slope, intercept = np.dot(np.linalg.inv(M),
+                                  np.array([np.sum(fake_data * x),
+                                  np.sum(fake_data)]))
     >>> print(slope)
     2.96264087528
     >>> print(intercept)
@@ -130,8 +142,11 @@ class GaussianPosterior(Posterior):
         self.loglikelihood = GaussianLikelihood(data, mean, var)
 
     def __repr__(self):
-        return "<GaussianPosterior(data={}, mean={}, var={}, prior={})>".format(self.data,
-                self.mean, self.var, self.prior)
+        return (f"<GaussianPosterior("
+                f"data={self.data}, "
+                f"mean={self.mean}, "
+                f"var={self.var}, "
+                f"prior={self.logprior})>")
 
 
 class PoissonPosterior(Posterior):
@@ -161,11 +176,13 @@ class PoissonPosterior(Posterior):
     >>> toy_data = np.random.randint(1, 20, size=100)
     >>> def mean(l):
     ...     return np.array([l])
-    >>> logP = PoissonPosterior(data=toy_data, mean=mean, prior=UniformPrior(lb=1., ub=20.))
+    >>> logP = PoissonPosterior(data=toy_data, mean=mean,
+                                prior=UniformPrior(lb=1., ub=20.))
     >>> mean_hat = logP.fit(x0=10.5)
     >>> mean_hat.x # MAP is the same of MLE for uniform prior
     array([ 9.29000013])
-    >>> logP = PoissonPosterior(data=toy_data, mean=mean, prior=GaussianPrior(mean=10, var=4))
+    >>> logP = PoissonPosterior(data=toy_data, mean=mean,
+                                prior=GaussianPrior(mean=10, var=4))
     >>> mean_hat = logP.fit(x0=10.5)
     >>> mean_hat.x
     array([ 9.30614261])
@@ -178,13 +195,16 @@ class PoissonPosterior(Posterior):
         self.loglikelihood = PoissonLikelihood(data, mean)
 
     def __repr__(self):
-        return "<PoissonPosterior(data={}, mean={}, prior={})>".format(self.data,
-                self.mean, self.prior)
+        return ("<PoissonPosterior("
+                f"data={self.data}, "
+                f"mean={self.mean}, "
+                f"prior={self.logprior})>")
 
 
 class MultivariateGaussianPosterior(Posterior):
     """
-    Implements the posterior distribution for a multivariate gaussian distribution.
+    Implements the posterior distribution for a
+        multivariate gaussian distribution.
 
     Attributes
     ----------
@@ -208,8 +228,11 @@ class MultivariateGaussianPosterior(Posterior):
         self.cov = cov
         self.dim = dim
         self.logprior = prior
-        self.loglikelihood = MultivariateGaussianLikelihood(data, mean, cov, dim)
+        self.loglikelihood = MultivariateGaussianLikelihood(
+            data, mean, cov, dim)
 
     def __repr__(self):
-        return ("<MultivariateGaussianPosterior(mean={}, cov={},"
-                " prior={})>".format(self.mean, self.cov, self.prior))
+        return ("<MultivariateGaussianPosterior("
+                f"mean={self.mean}, "
+                f"cov={self.cov}, "
+                f"prior={self.logprior})>")

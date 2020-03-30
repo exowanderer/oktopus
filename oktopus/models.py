@@ -5,6 +5,7 @@ import math
 
 
 class Model(object):
+
     def __call__(self, *params):
         return self.evaluate(*params)
 
@@ -14,6 +15,7 @@ class Model(object):
 
 
 class ConstantModel(Model):
+
     def evaluate(self, c):
         return np.array([c])
 
@@ -22,6 +24,7 @@ class ConstantModel(Model):
 
 
 class LinearModel(Model):
+
     def __init__(self, X):
         self.X = np.asarray(X)
 
@@ -42,15 +45,18 @@ class LinearModel(Model):
 
 
 class SymmetricGaussian2D(Model):
+
     def __init__(self, x, y):
         self.x = x
         self.y = y
 
     def evaluate(self, A, xo, yo, s):
-        return A * np.exp(-0.5 * (((self.x - xo) ** 2 + (self.y - yo) ** 2)) / s ** 2)
+        return A * np.exp(-0.5 * (((self.x - xo) ** 2 +
+                                   (self.y - yo) ** 2)) / s ** 2)
 
 
 class Gaussian2D(Model):
+
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -62,6 +68,7 @@ class Gaussian2D(Model):
 
 
 class Gaussian2DPlusBkg(Gaussian2D):
+
     def __init__(self, x, y):
         super(Gaussian2DPlusBkg, self).__init__(x, y)
 
@@ -70,6 +77,7 @@ class Gaussian2DPlusBkg(Gaussian2D):
 
 
 class IntegratedSymmetricGaussian2D(Model):
+
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -83,6 +91,7 @@ class IntegratedSymmetricGaussian2D(Model):
 
 
 class ExpSquaredKernel(Model):
+
     def __init__(self, t):
         self.t = t
 
@@ -91,6 +100,7 @@ class ExpSquaredKernel(Model):
 
 
 class WhiteNoiseKernel(Model):
+
     def __init__(self, n):
         self.n = n
 
